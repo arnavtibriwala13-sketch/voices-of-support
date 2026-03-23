@@ -87,7 +87,7 @@ export function VideoPlayer({ src, thumbnailUrl }: VideoPlayerProps) {
       </div>
 
       {/* Controls */}
-      <div className="bg-white px-4 py-3 space-y-2">
+      <div className="bg-[#E6E6E6] px-4 py-3 space-y-2">
         <div className="flex items-center gap-3">
           <button
             onClick={togglePlay}
@@ -105,7 +105,7 @@ export function VideoPlayer({ src, thumbnailUrl }: VideoPlayerProps) {
           </button>
 
           <div className="flex-1 flex flex-col gap-1">
-            <div className="relative h-1.5 bg-gray-200 rounded-full">
+            <div className="relative h-1.5 bg-[#1F2933]/15 rounded-full">
               <div
                 className="absolute left-0 top-0 h-full bg-[#4F6D9A] rounded-full"
                 style={{ width: `${progress}%` }}

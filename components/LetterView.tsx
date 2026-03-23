@@ -8,9 +8,9 @@ interface LetterViewProps {
 
 export function LetterView({ content, senderName, senderType }: LetterViewProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-[#E6E6E6] rounded-2xl overflow-hidden">
       {/* Letter header */}
-      <div className="bg-gradient-to-r from-[#4F6D9A]/10 to-[#8FA87A]/10 px-6 py-5 border-b border-gray-100">
+      <div className="bg-[#3E5C86]/10 px-6 py-5 border-b border-[#1F2933]/10">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-[#4F6D9A]/15 rounded-full flex items-center justify-center">
             <svg className="w-6 h-6 text-[#4F6D9A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,7 +37,7 @@ export function LetterView({ content, senderName, senderType }: LetterViewProps)
       </div>
 
       {/* Letter footer */}
-      <div className="px-6 py-4 border-t border-gray-50">
+      <div className="px-6 py-4 border-t border-[#1F2933]/5">
         <p className="text-sm text-[#1F2933]/60 italic text-right">
           — {senderName}
         </p>

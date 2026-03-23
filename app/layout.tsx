@@ -15,14 +15,10 @@ export const metadata: Metadata = {
     'Private emotional support platform for soldiers — video, audio, and letter messages from family and people around the world.',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="bg-[#E6E6E6] text-[#1F2933] font-sans antialiased min-h-screen">
+      <body className="bg-[#4F6D9A] text-[#1F2933] font-sans antialiased min-h-screen">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

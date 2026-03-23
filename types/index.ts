@@ -9,6 +9,17 @@ export interface Message {
   transcript?: string;
   content_text?: string;
   duration?: number;
+  recipient_type?: 'individual' | 'global';
+  creator_user_id?: string;
+  created_at: unknown;
+}
+
+export interface Contact {
+  id: string;
+  owner_user_id: string;
+  name: string;
+  email?: string;
+  relationship_type: 'family' | 'close';
   created_at: unknown;
 }
 

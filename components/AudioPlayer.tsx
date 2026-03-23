@@ -66,7 +66,7 @@ export function AudioPlayer({ src, transcript, senderName }: AudioPlayerProps) {
       <audio ref={audioRef} src={src} preload="metadata" />
 
       {/* Player card */}
-      <div className="bg-white rounded-2xl shadow-sm p-5">
+      <div className="bg-[#E6E6E6] rounded-2xl p-5">
         {senderName && (
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-[#4F6D9A]/10 rounded-full flex items-center justify-center">
@@ -117,7 +117,7 @@ export function AudioPlayer({ src, transcript, senderName }: AudioPlayerProps) {
           </button>
 
           <div className="flex-1">
-            <div className="relative h-1.5 bg-gray-200 rounded-full mb-1">
+            <div className="relative h-1.5 bg-[#1F2933]/15 rounded-full mb-1">
               <div
                 className="absolute left-0 top-0 h-full bg-[#4F6D9A] rounded-full"
                 style={{ width: `${progress}%` }}
@@ -141,7 +141,7 @@ export function AudioPlayer({ src, transcript, senderName }: AudioPlayerProps) {
 
       {/* Transcript */}
       {transcript && (
-        <div className="bg-white rounded-2xl shadow-sm p-5">
+        <div className="bg-[#E6E6E6] rounded-2xl p-5">
           <h3 className="text-xs font-semibold text-[#1F2933]/50 uppercase tracking-wider mb-3">
             Transcript
           </h3>
