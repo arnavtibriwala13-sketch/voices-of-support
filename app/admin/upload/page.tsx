@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { uploadMedia, uploadThumbnail } from '@/lib/storage';
-import { createMessage } from '@/lib/firestore';
+import { createMessage } from '@/lib/db';
 
 type MessageType = 'video' | 'audio' | 'letter';
 type SenderType = 'family' | 'global';
@@ -74,7 +74,7 @@ export default function AdminUploadPage() {
         if (!contentText.trim()) { setError('Letter content is required.'); setUploading(false); return; }
       }
 
-      const messageData = {
+      const messageId = await createMessage({
         user_id: targetUserId.trim(),
         sender_name: senderName.trim(),
         sender_type: senderType,
@@ -84,12 +84,9 @@ export default function AdminUploadPage() {
         transcript: messageType === 'audio' ? transcript.trim() || undefined : undefined,
         content_text: messageType === 'letter' ? contentText.trim() : undefined,
         duration: messageType === 'audio' && duration ? Number(duration) : undefined,
-        created_at: null,
-      };
+      });
 
-      const docId = await createMessage(messageData);
-
-      setSuccess(`Message uploaded successfully! ID: ${docId}`);
+      setSuccess(`Message uploaded successfully! ID: ${messageId}`);
       setSenderName('');
       setTargetUserId('');
       setVideoFile(null);
@@ -100,7 +97,7 @@ export default function AdminUploadPage() {
       setContentText('');
     } catch (err) {
       console.error(err);
-      setError('Upload failed. Please check your Firebase configuration and try again.');
+      setError(err instanceof Error ? err.message : 'Upload failed. Check your Supabase configuration.');
     } finally {
       setUploading(false);
     }
@@ -114,7 +111,6 @@ export default function AdminUploadPage() {
   return (
     <div className="min-h-screen bg-[#E6E6E6] py-8 px-4">
       <div className="max-w-lg mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="text-xs text-[#1F2933]/50 font-medium uppercase tracking-wider">Admin</p>
@@ -130,7 +126,6 @@ export default function AdminUploadPage() {
 
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Sender name */}
             <div>
               <label className={labelClass}>Sender Name</label>
               <input
@@ -143,7 +138,6 @@ export default function AdminUploadPage() {
               />
             </div>
 
-            {/* Sender type */}
             <div>
               <label className={labelClass}>Sender Type</label>
               <select
@@ -151,12 +145,11 @@ export default function AdminUploadPage() {
                 onChange={(e) => setSenderType(e.target.value as SenderType)}
                 className={selectClass}
               >
-                <option value="family">Family & Close Circle</option>
+                <option value="family">Family &amp; Close Circle</option>
                 <option value="global">Support from Around the World</option>
               </select>
             </div>
 
-            {/* Message type */}
             <div>
               <label className={labelClass}>Message Type</label>
               <div className="flex gap-2">
@@ -177,23 +170,21 @@ export default function AdminUploadPage() {
               </div>
             </div>
 
-            {/* Target user ID */}
             <div>
               <label className={labelClass}>Target Soldier User ID</label>
               <input
                 type="text"
                 value={targetUserId}
                 onChange={(e) => setTargetUserId(e.target.value)}
-                placeholder="Firebase Auth UID of the soldier"
+                placeholder="Supabase auth UUID of the soldier"
                 className={inputClass}
                 required
               />
               <p className="text-xs text-[#1F2933]/40 mt-1">
-                The Firebase UID of the soldier who will receive this message.
+                The Supabase user UUID of the soldier who will receive this message.
               </p>
             </div>
 
-            {/* Video fields */}
             {messageType === 'video' && (
               <>
                 <div>
@@ -222,7 +213,6 @@ export default function AdminUploadPage() {
               </>
             )}
 
-            {/* Audio fields */}
             {messageType === 'audio' && (
               <>
                 <div>
@@ -259,7 +249,6 @@ export default function AdminUploadPage() {
               </>
             )}
 
-            {/* Letter fields */}
             {messageType === 'letter' && (
               <div>
                 <label className={labelClass}>Letter Content</label>

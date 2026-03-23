@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,15 +16,23 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
     try {
-      const { auth } = await import('@/lib/firebase');
-      const { signInWithEmailAndPassword } = await import('firebase/auth');
-      await signInWithEmailAndPassword(auth, email, password);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
       router.push('/home');
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to sign in. Please check your credentials.';
-      setError(message.replace('Firebase: ', '').replace(/\(auth.*\)\.?/, '').trim());
+      const message = err instanceof Error ? err.message : 'Failed to sign in.';
+      if (
+        message.toLowerCase().includes('invalid login credentials') ||
+        message.toLowerCase().includes('invalid email or password')
+      ) {
+        setError('Invalid email or password. Please try again.');
+      } else if (message.toLowerCase().includes('email not confirmed')) {
+        setError('Please confirm your email address before signing in.');
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }

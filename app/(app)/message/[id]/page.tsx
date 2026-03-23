@@ -14,7 +14,7 @@ export default function MessagePage({ params }: { params: Promise<{ id: string }
   const { id } = use(params);
   const router = useRouter();
   const { user } = useAuth();
-  const { messages, savedIds, loading, markRead, toggleSave } = useMessages(user?.uid ?? null);
+  const { messages, savedIds, loading, markRead, toggleSave } = useMessages(user?.id ?? null);
   const [message, setMessage] = useState<Message | null>(null);
 
   useEffect(() => {

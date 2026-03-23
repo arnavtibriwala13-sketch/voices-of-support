@@ -18,7 +18,7 @@ const tabs: { id: FilterTab; label: string }[] = [
 export default function VaultPage() {
   const { user } = useAuth();
   const { messages, savedIds, readIds, loading, error, toggleSave } = useMessages(
-    user?.uid ?? null
+    user?.id ?? null
   );
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
 

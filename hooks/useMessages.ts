@@ -8,7 +8,7 @@ import {
   saveMessage,
   unsaveMessage,
   markAsRead,
-} from '@/lib/firestore';
+} from '@/lib/db';
 import type { Message } from '@/types';
 
 export function useMessages(userId: string | null) {
@@ -25,6 +25,7 @@ export function useMessages(userId: string | null) {
     }
     try {
       setLoading(true);
+      setError(null);
       const [msgs, saved, read] = await Promise.all([
         getUserMessages(userId),
         getSavedMessages(userId),
@@ -49,6 +50,7 @@ export function useMessages(userId: string | null) {
     async (messageId: string) => {
       if (!userId) return;
       const isSaved = savedIds.has(messageId);
+      // Optimistic update
       setSavedIds((prev) => {
         const next = new Set(prev);
         if (isSaved) {
@@ -66,6 +68,7 @@ export function useMessages(userId: string | null) {
         }
       } catch (err) {
         console.error('Error toggling save:', err);
+        // Revert on failure
         setSavedIds((prev) => {
           const next = new Set(prev);
           if (isSaved) {

@@ -4,21 +4,20 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMessages } from '@/hooks/useMessages';
 import { MessageCard } from '@/components/MessageCard';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function HomePage() {
   const { user } = useAuth();
   const router = useRouter();
   const { messages, savedIds, readIds, loading, error, toggleSave } = useMessages(
-    user?.uid ?? null
+    user?.id ?? null
   );
 
   const familyMessages = messages.filter((m) => m.sender_type === 'family');
   const globalMessages = messages.filter((m) => m.sender_type === 'global');
 
   const handleSignOut = async () => {
-    const { auth } = await import('@/lib/firebase');
-    const { signOut } = await import('firebase/auth');
-    await signOut(auth);
+    await supabase.auth.signOut();
     router.push('/login');
   };
 

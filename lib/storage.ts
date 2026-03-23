@@ -1,17 +1,21 @@
+import { supabase } from './supabase';
+
+const BUCKET = 'media';
+
 export async function uploadMedia(file: File, path: string): Promise<string> {
-  const { storage } = await import('./firebase');
-  const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
-  const storageRef = ref(storage, path);
-  const snapshot = await uploadBytes(storageRef, file);
-  const downloadURL = await getDownloadURL(snapshot.ref);
-  return downloadURL;
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, file, { upsert: true, cacheControl: '3600' });
+
+  if (error) throw new Error(error.message);
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(BUCKET).getPublicUrl(data.path);
+
+  return publicUrl;
 }
 
 export async function uploadThumbnail(file: File, path: string): Promise<string> {
-  const { storage } = await import('./firebase');
-  const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
-  const storageRef = ref(storage, path);
-  const snapshot = await uploadBytes(storageRef, file);
-  const downloadURL = await getDownloadURL(snapshot.ref);
-  return downloadURL;
+  return uploadMedia(file, path);
 }

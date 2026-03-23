@@ -43,6 +43,25 @@ const navItems = [
     ),
   },
   {
+    href: '/create',
+    label: 'Create',
+    icon: (active: boolean) => (
+      <svg
+        className={`w-6 h-6 ${active ? 'text-[#4F6D9A]' : 'text-[#1F2933]/40'}`}
+        fill={active ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 4v16m8-8H4"
+        />
+      </svg>
+    ),
+  },
+  {
     href: '/audio',
     label: 'Audio',
     icon: (active: boolean) => (
@@ -90,16 +109,31 @@ export function BottomNav() {
       <div className="max-w-lg mx-auto flex items-center justify-around px-2 py-2 pb-safe">
         {navItems.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href + '/');
+          const isCreate = item.href === '/create';
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-colors"
+              className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-colors ${
+                isCreate
+                  ? 'bg-[#4F6D9A] text-white px-4 py-2 rounded-xl shadow-sm -mt-1'
+                  : ''
+              }`}
             >
-              {item.icon(active)}
+              {isCreate ? (
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              ) : (
+                item.icon(active)
+              )}
               <span
                 className={`text-[11px] font-medium leading-none ${
-                  active ? 'text-[#4F6D9A]' : 'text-[#1F2933]/40'
+                  isCreate
+                    ? 'text-white'
+                    : active
+                    ? 'text-[#4F6D9A]'
+                    : 'text-[#1F2933]/40'
                 }`}
               >
                 {item.label}

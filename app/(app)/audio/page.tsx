@@ -7,7 +7,7 @@ import { MessageCard } from '@/components/MessageCard';
 export default function AudioPage() {
   const { user } = useAuth();
   const { messages, savedIds, readIds, loading, error, toggleSave } = useMessages(
-    user?.uid ?? null
+    user?.id ?? null
   );
 
   const audioMessages = messages.filter((m) => m.type === 'audio');
