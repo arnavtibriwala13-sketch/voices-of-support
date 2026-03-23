@@ -139,14 +139,14 @@ export default function ContactsPage() {
   const handleRespond = async (requestId: string, status: 'accepted' | 'declined') => {
     if (!user) return;
     setRespondingId(requestId);
+    setError('');
     try {
       await respondToRequest(requestId, status, user.id);
       setIncoming((prev) => prev.filter((r) => r.id !== requestId));
-      if (status === 'accepted') {
-        await fetchAll();
-      }
+      await fetchAll();
     } catch (err) {
       console.error(err);
+      setError(err instanceof Error ? err.message : 'Failed to respond to request.');
     } finally {
       setRespondingId(null);
     }
