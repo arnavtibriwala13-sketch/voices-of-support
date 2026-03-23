@@ -181,6 +181,17 @@ export async function getIncomingRequests(userEmail: string): Promise<FriendRequ
   return (data || []) as FriendRequest[];
 }
 
+export async function getAcceptedIncomingRequests(userEmail: string): Promise<FriendRequest[]> {
+  const { data, error } = await supabase
+    .from('friend_requests')
+    .select('*')
+    .eq('recipient_email', userEmail)
+    .eq('status', 'accepted')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data || []) as FriendRequest[];
+}
+
 export async function getOutgoingRequests(userId: string): Promise<FriendRequest[]> {
   const { data, error } = await supabase
     .from('friend_requests')

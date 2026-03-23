@@ -9,6 +9,7 @@ import {
   deleteContact,
   sendFriendRequest,
   getIncomingRequests,
+  getAcceptedIncomingRequests,
   getOutgoingRequests,
   respondToRequest,
   createUserRecord,
@@ -24,6 +25,7 @@ export default function ContactsPage() {
   const [tab, setTab] = useState<Tab>('contacts');
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [incoming, setIncoming] = useState<FriendRequest[]>([]);
+  const [acceptedIncoming, setAcceptedIncoming] = useState<FriendRequest[]>([]);
   const [outgoing, setOutgoing] = useState<FriendRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -39,13 +41,15 @@ export default function ContactsPage() {
   const fetchAll = useCallback(async () => {
     if (!user) return;
     try {
-      const [c, inc, out] = await Promise.all([
+      const [c, inc, accInc, out] = await Promise.all([
         getContacts(user.id),
         getIncomingRequests(user.email ?? ''),
+        getAcceptedIncomingRequests(user.email ?? ''),
         getOutgoingRequests(user.id),
       ]);
       setContacts(c);
       setIncoming(inc);
+      setAcceptedIncoming(accInc);
       setOutgoing(out);
     } catch (err) {
       console.error(err);
@@ -246,13 +250,33 @@ export default function ContactsPage() {
             </div>
           )}
 
-          {contacts.length === 0 && !showForm && (
+          {contacts.length === 0 && acceptedIncoming.length === 0 && !showForm && (
             <div className="text-center py-16">
               <div className="w-16 h-16 bg-[#3E5C86] rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               </div>
               <p className="text-white/70 text-sm">No contacts yet.</p>
               <p className="text-white/40 text-xs mt-1">Add someone by email to send them a friend request.</p>
+            </div>
+          )}
+
+          {/* Connections accepted from incoming requests (the other person added you) */}
+          {acceptedIncoming.length > 0 && (
+            <div className="space-y-3 mb-3">
+              {acceptedIncoming.map((req) => (
+                <div key={req.id} className="bg-[#E6E6E6] rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+                  <div className="w-11 h-11 bg-[#3E5C86] rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-base">{req.sender_name.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[#1F2933] text-sm truncate">{req.sender_name}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#8FA87A]/20 text-[#5a7a46]">Close Friend</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">✓ Connected</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { uploadMedia, uploadThumbnail } from '@/lib/storage';
-import { createMessage, getContacts, getOutgoingRequests } from '@/lib/db';
+import { createMessage, getContacts, getOutgoingRequests, getAcceptedIncomingRequests } from '@/lib/db';
 import type { Contact } from '@/types';
 
 type MessageType = 'video' | 'audio' | 'letter';
@@ -37,10 +37,14 @@ export default function CreatePage() {
 
   useEffect(() => {
     if (!user) return;
-    Promise.all([getContacts(user.id), getOutgoingRequests(user.id)])
-      .then(([contacts, outgoing]) => {
-        // Use linked_user_id if set, otherwise fall back to accepted friend request's recipient_user_id
-        const enriched = contacts
+    Promise.all([
+      getContacts(user.id),
+      getOutgoingRequests(user.id),
+      getAcceptedIncomingRequests(user.email ?? ''),
+    ])
+      .then(([myContacts, outgoing, acceptedIncoming]) => {
+        // Contacts where linked_user_id is set, or outgoing request was accepted
+        const enriched = myContacts
           .map((c) => {
             if (c.linked_user_id) return c;
             const accepted = outgoing.find(
@@ -50,7 +54,23 @@ export default function CreatePage() {
             return c;
           })
           .filter((c) => c.linked_user_id);
-        setContacts(enriched);
+
+        // Also include people who sent YOU an accepted request (they added you first)
+        const fromIncoming: Contact[] = acceptedIncoming
+          .filter((r) => r.sender_user_id)
+          .map((r) => ({
+            id: r.id,
+            owner_user_id: user.id,
+            name: r.sender_name,
+            relationship_type: 'close' as const,
+            linked_user_id: r.sender_user_id,
+            created_at: r.created_at,
+          }));
+
+        // Merge, avoiding duplicates by linked_user_id
+        const seen = new Set(enriched.map((c) => c.linked_user_id));
+        const merged = [...enriched, ...fromIncoming.filter((c) => !seen.has(c.linked_user_id))];
+        setContacts(merged);
       })
       .catch(console.error);
   }, [user]);
