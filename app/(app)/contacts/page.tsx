@@ -11,6 +11,7 @@ import {
   getIncomingRequests,
   getOutgoingRequests,
   respondToRequest,
+  createUserRecord,
 } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
 import type { Contact, FriendRequest } from '@/types';
@@ -141,6 +142,8 @@ export default function ContactsPage() {
     setRespondingId(requestId);
     setError('');
     try {
+      // Ensure this user exists in public.users so the RLS policy allows the UPDATE
+      if (user.email) await createUserRecord(user.id, user.email);
       await respondToRequest(requestId, status, user.id);
       setIncoming((prev) => prev.filter((r) => r.id !== requestId));
       await fetchAll();
@@ -256,7 +259,7 @@ export default function ContactsPage() {
           <div className="space-y-3 pb-4">
             {contacts.map((contact) => {
               const matchingRequest = outgoing.find((r) => r.recipient_email === contact.email);
-              const isAccepted = !!contact.linked_user_id;
+              const isAccepted = !!contact.linked_user_id || matchingRequest?.status === 'accepted';
               const isPending = !isAccepted && matchingRequest?.status === 'pending';
               const isDeclined = !isAccepted && matchingRequest?.status === 'declined';
 

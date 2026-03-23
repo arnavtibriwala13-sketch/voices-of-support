@@ -196,10 +196,9 @@ export async function respondToRequest(
   status: 'accepted' | 'declined',
   recipientUserId: string
 ): Promise<void> {
-  const { error } = await supabase.rpc('respond_to_friend_request', {
-    p_request_id: requestId,
-    p_status: status,
-    p_recipient_user_id: recipientUserId,
-  });
+  const { error } = await supabase
+    .from('friend_requests')
+    .update({ status, recipient_user_id: recipientUserId })
+    .eq('id', requestId);
   if (error) throw new Error(error.message);
 }
