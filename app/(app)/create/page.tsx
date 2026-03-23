@@ -93,10 +93,8 @@ export default function CreatePage() {
 
       setUploadProgress('Saving message...');
 
-      // Determine sender_type based on contact relationship or global
-      const senderType = selectedContact
-        ? (selectedContact.relationship_type === 'family' ? 'family' : 'global')
-        : 'global';
+      // family + close friends both appear in "Family & Close Circle"; global broadcast uses 'global'
+      const senderType = recipientMode === 'individual' ? 'family' : 'global';
 
       await createMessage({
         user_id: recipientMode === 'individual' ? (selectedContact!.linked_user_id!) : uid,

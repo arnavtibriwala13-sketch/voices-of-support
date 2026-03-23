@@ -82,39 +82,40 @@ export default function ContactsPage() {
   };
 
   const handleSave = async () => {
-    if (!user || !name.trim()) { setError('Name is required.'); return; }
+    if (!user) return;
+    if (!email.trim()) { setError('Email is required.'); return; }
+    // Auto-fill name from email prefix if left blank
+    const resolvedName = name.trim() || email.trim().split('@')[0];
     setSaving(true); setError('');
     try {
       if (editContact) {
         await updateContact(editContact.id, {
-          name: name.trim(),
-          email: email.trim() || undefined,
+          name: resolvedName,
+          email: email.trim(),
           relationship_type: relationshipType,
         });
         setContacts((prev) =>
           prev.map((c) =>
             c.id === editContact.id
-              ? { ...c, name: name.trim(), email: email.trim() || undefined, relationship_type: relationshipType }
+              ? { ...c, name: resolvedName, email: email.trim(), relationship_type: relationshipType }
               : c
           )
         );
       } else {
         const newContact = await createContact(user.id, {
-          name: name.trim(),
-          email: email.trim() || undefined,
+          name: resolvedName,
+          email: email.trim(),
           relationship_type: relationshipType,
         });
         setContacts((prev) => [...prev, newContact]);
 
-        // Auto-send friend request if email provided
-        if (email.trim()) {
-          const displayName = user.email?.split('@')[0] || 'Someone';
-          try {
-            await sendFriendRequest(user.id, displayName, email.trim());
-            await fetchAll();
-          } catch (reqErr) {
-            console.error('Friend request error:', reqErr);
-          }
+        // Auto-send friend request
+        const displayName = user.email?.split('@')[0] || 'Someone';
+        try {
+          await sendFriendRequest(user.id, displayName, email.trim());
+          await fetchAll();
+        } catch (reqErr) {
+          console.error('Friend request error:', reqErr);
         }
       }
       setShowForm(false);
@@ -208,17 +209,17 @@ export default function ContactsPage() {
               <h2 className="text-base font-semibold text-[#1F2933] mb-4">{editContact ? 'Edit Contact' : 'New Contact'}</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#1F2933] mb-1.5">Name *</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Contact name" className={inputClass} autoFocus />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-[#1F2933] mb-1.5">
-                    Email <span className="text-[#1F2933]/40 font-normal">(optional — required to send messages)</span>
-                  </label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="their@email.com" className={inputClass} />
+                  <label className="block text-sm font-medium text-[#1F2933] mb-1.5">Email *</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="their@email.com" className={inputClass} autoFocus />
                   {!editContact && email.trim() && (
                     <p className="text-xs text-[#3E5C86] mt-1">A friend request will be sent to this email.</p>
                   )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#1F2933] mb-1.5">
+                    Name <span className="text-[#1F2933]/40 font-normal">(optional — auto-filled from email)</span>
+                  </label>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Display name" className={inputClass} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#1F2933] mb-2">Relationship</label>
@@ -248,7 +249,7 @@ export default function ContactsPage() {
                 <svg className="w-8 h-8 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               </div>
               <p className="text-white/70 text-sm">No contacts yet.</p>
-              <p className="text-white/40 text-xs mt-1">Add someone's email to send them a friend request.</p>
+              <p className="text-white/40 text-xs mt-1">Add someone by email to send them a friend request.</p>
             </div>
           )}
 

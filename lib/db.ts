@@ -109,7 +109,7 @@ export async function getContacts(userId: string): Promise<Contact[]> {
 
 export async function createContact(
   userId: string,
-  contact: { name: string; email?: string; relationship_type: 'family' | 'close' }
+  contact: { name: string; email: string; relationship_type: 'family' | 'close' }
 ): Promise<Contact> {
   const { data, error } = await supabase
     .from('contacts')
