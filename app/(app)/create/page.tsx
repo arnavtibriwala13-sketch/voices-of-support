@@ -37,7 +37,7 @@ export default function CreatePage() {
 
   useEffect(() => {
     if (user) {
-      getContacts(user.id).then(setContacts).catch(console.error);
+      getContacts(user.id).then((data) => setContacts(data.filter((c) => c.linked_user_id))).catch(console.error);
     }
   }, [user]);
 
@@ -57,6 +57,7 @@ export default function CreatePage() {
   const handleStep2Next = () => {
     if (!recipientMode) { setError('Please select who this message is for.'); return; }
     if (recipientMode === 'individual' && !selectedContact) { setError('Please select a contact.'); return; }
+    if (recipientMode === 'individual' && selectedContact && !selectedContact.linked_user_id) { setError("This contact hasn't accepted your friend request yet."); return; }
     if (!senderName.trim()) { setError('Please enter your name.'); return; }
     setError('');
     setStep(3);
@@ -98,7 +99,7 @@ export default function CreatePage() {
         : 'global';
 
       await createMessage({
-        user_id: uid,
+        user_id: recipientMode === 'individual' ? (selectedContact!.linked_user_id!) : uid,
         sender_name: senderName.trim(),
         sender_type: senderType,
         type: messageType,

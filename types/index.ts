@@ -20,6 +20,17 @@ export interface Contact {
   name: string;
   email?: string;
   relationship_type: 'family' | 'close';
+  linked_user_id?: string;
+  created_at: unknown;
+}
+
+export interface FriendRequest {
+  id: string;
+  sender_user_id: string;
+  sender_name: string;
+  recipient_email: string;
+  recipient_user_id?: string;
+  status: 'pending' | 'accepted' | 'declined';
   created_at: unknown;
 }
 

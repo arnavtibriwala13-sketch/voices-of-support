@@ -1,11 +1,12 @@
 import { supabase } from './supabase';
-import type { Message, Contact } from '@/types';
+import type { Message, Contact, FriendRequest } from '@/types';
 
 export async function getUserMessages(userId: string): Promise<Message[]> {
   const { data, error } = await supabase
     .from('messages')
     .select('*')
     .or(`user_id.eq.${userId},recipient_type.eq.global`)
+    .or(`creator_user_id.is.null,creator_user_id.neq.${userId}`)
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -135,5 +136,69 @@ export async function deleteContact(contactId: string): Promise<void> {
     .from('contacts')
     .delete()
     .eq('id', contactId);
+  if (error) throw new Error(error.message);
+}
+
+// Friend requests
+export async function getUserIdByEmail(email: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
+export async function sendFriendRequest(
+  senderUserId: string,
+  senderName: string,
+  recipientEmail: string
+): Promise<void> {
+  const recipientUserId = await getUserIdByEmail(recipientEmail);
+  const { error } = await supabase
+    .from('friend_requests')
+    .upsert(
+      {
+        sender_user_id: senderUserId,
+        sender_name: senderName,
+        recipient_email: recipientEmail,
+        recipient_user_id: recipientUserId ?? null,
+        status: 'pending',
+      },
+      { onConflict: 'sender_user_id,recipient_email' }
+    );
+  if (error) throw new Error(error.message);
+}
+
+export async function getIncomingRequests(userEmail: string): Promise<FriendRequest[]> {
+  const { data, error } = await supabase
+    .from('friend_requests')
+    .select('*')
+    .eq('recipient_email', userEmail)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data || []) as FriendRequest[];
+}
+
+export async function getOutgoingRequests(userId: string): Promise<FriendRequest[]> {
+  const { data, error } = await supabase
+    .from('friend_requests')
+    .select('*')
+    .eq('sender_user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data || []) as FriendRequest[];
+}
+
+export async function respondToRequest(
+  requestId: string,
+  status: 'accepted' | 'declined',
+  recipientUserId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('friend_requests')
+    .update({ status, recipient_user_id: recipientUserId })
+    .eq('id', requestId);
   if (error) throw new Error(error.message);
 }

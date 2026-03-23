@@ -9,6 +9,7 @@ import {
   unsaveMessage,
   markAsRead,
 } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 import type { Message } from '@/types';
 
 export function useMessages(userId: string | null) {
@@ -46,11 +47,58 @@ export function useMessages(userId: string | null) {
     fetchData();
   }, [fetchData]);
 
+  // Realtime subscription: new messages addressed to this user or global
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`messages:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const newMsg = payload.new as Message;
+          // Only add if not created by the current user
+          if (newMsg.creator_user_id !== userId) {
+            setMessages((prev) => [newMsg, ...prev]);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `recipient_type=eq.global`,
+        },
+        (payload) => {
+          const newMsg = payload.new as Message;
+          // Don't show global messages you created
+          if (newMsg.creator_user_id !== userId) {
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === newMsg.id)) return prev;
+              return [newMsg, ...prev];
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
   const toggleSave = useCallback(
     async (messageId: string) => {
       if (!userId) return;
       const isSaved = savedIds.has(messageId);
-      // Optimistic update
       setSavedIds((prev) => {
         const next = new Set(prev);
         if (isSaved) {
@@ -68,7 +116,6 @@ export function useMessages(userId: string | null) {
         }
       } catch (err) {
         console.error('Error toggling save:', err);
-        // Revert on failure
         setSavedIds((prev) => {
           const next = new Set(prev);
           if (isSaved) {
