@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { uploadMedia, uploadThumbnail } from '@/lib/storage';
-import { createMessage, getContacts } from '@/lib/db';
+import { createMessage, getContacts, getOutgoingRequests } from '@/lib/db';
 import type { Contact } from '@/types';
 
 type MessageType = 'video' | 'audio' | 'letter';
@@ -36,9 +36,23 @@ export default function CreatePage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (user) {
-      getContacts(user.id).then((data) => setContacts(data.filter((c) => c.linked_user_id))).catch(console.error);
-    }
+    if (!user) return;
+    Promise.all([getContacts(user.id), getOutgoingRequests(user.id)])
+      .then(([contacts, outgoing]) => {
+        // Use linked_user_id if set, otherwise fall back to accepted friend request's recipient_user_id
+        const enriched = contacts
+          .map((c) => {
+            if (c.linked_user_id) return c;
+            const accepted = outgoing.find(
+              (r) => r.recipient_email === c.email && r.status === 'accepted' && r.recipient_user_id
+            );
+            if (accepted?.recipient_user_id) return { ...c, linked_user_id: accepted.recipient_user_id };
+            return c;
+          })
+          .filter((c) => c.linked_user_id);
+        setContacts(enriched);
+      })
+      .catch(console.error);
   }, [user]);
 
   // Auto-fill sender name from user email
