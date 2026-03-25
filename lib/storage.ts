@@ -13,7 +13,7 @@ export async function uploadMedia(file: File, path: string): Promise<string> {
   const safePath = sanitizeStoragePath(path);
   const { data, error } = await supabase.storage
     .from(BUCKET)
-    .upload(safePath, file, { upsert: true, cacheControl: '3600' });
+    .upload(safePath, file, { upsert: true, cacheControl: '3600', contentType: file.type || 'application/octet-stream' });
 
   if (error) throw new Error(error.message);
 
